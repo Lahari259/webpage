@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Verification System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e2ebee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #eee6e6;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 450px;
+            text-align: center;
+        }
+        h2, h3 {
+            color: #333;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .template-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .template {
+            width: 100px;
+            height: 140px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            margin: 5px;
+        }
+        .selected {
+            border: 2px solid #28a745;
+        }
+        #resume-output {
+            text-align: left;
+            border: 1px solid #ccc;
+            padding: 20px;
+            position: relative;
+            margin-top: 20px;
+            background: #fff;
+        }
+        #resume-output img.qr {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+        }
+        #uploaded-documents img {
+            width: 100px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Resume Verification System</h2>
+    <form id="resume-form">
+        <!-- Step 1 -->
+        <div class="step step-1">
+            <h3>Step 1: Sign Up</h3>
+            <input type="text" id="name" placeholder="Full Name" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="button" onclick="nextStep(2)">Next</button>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step step-2" style="display: none;">
+            <h3>Step 2: Resume Information</h3>
+            <input type="text" id="skills" placeholder="Skills" required>
+            <input type="text" id="education" placeholder="Education" required>
+            <input type="text" id="experience" placeholder="Experience" required>
+            <input type="text" id="projects" placeholder="Projects" required>
+            <button type="button" onclick="nextStep(3)">Next</button>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step step-3" style="display: none;">
+            <h3>Step 3: Upload Documents</h3>
+            <input type="file" id="documents" multiple accept="image/*" required>
+            <button type="button" onclick="generateQRCode()">Generate QR Code</button>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step step-4" style="display: none;">
+            <h3>Step 4: Select Resume Template</h3>
+            <p>Select a template to format your resume professionally:</p>
+            <div class="template-container">
+                <img src="template1.png" class="template" onclick="selectTemplate('Template 1', this)">
+                <img src="template2.png" class="template" onclick="selectTemplate('Template 2', this)">
+                <img src="template3.png" class="template" onclick="selectTemplate('Template 3', this)">
+            </div>
+            <p id="selected-template" style="font-weight: bold;"></p>
+            <button type="button" id="generate-resume-btn" onclick="generateResume()" disabled>Generate Resume</button>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step step-5" style="display: none;">
+            <h3>Step 5: Final Resume with QR Code</h3>
+            <p>Your resume has been generated with a verification QR code embedded below.</p>
+
+            <div id="resume-output">
+                <h2 id="resume-name"></h2>
+                <p><strong>Email:</strong> <span id="resume-email"></span></p>
+                <p><strong>Skills:</strong> <span id="resume-skills"></span></p>
+                <p><strong>Education:</strong> <span id="resume-education"></span></p>
+                <p><strong>Experience:</strong> <span id="resume-experience"></span></p>
+                <p><strong>Projects:</strong> <span id="resume-projects"></span></p>
+                <div id="uploaded-documents"></div>
+                <img id="embedded-qr" class="qr" src="" alt="QR Code">
+            </div>
+
+            <br>
+            <button type="button" onclick="downloadResume()">Download Resume</button>
+        </div>
+    </form>
+</div>
+
+<!-- QR Code library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<!-- html2canvas library to take screenshot -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+    function nextStep(step) {
+        document.querySelectorAll('.step').forEach(stepDiv => {
+            stepDiv.style.display = 'none';
+        });
+        document.querySelector('.step-' + step).style.display = 'block';
+    }
+
+    let selectedQRData = '';
+
+    function generateQRCode() {
+        const email = document.getElementById('email').value;
+        selectedQRData = 'https://your-verification-link.com/verify?email=' + encodeURIComponent(email);
+
+        const qr = new QRious({
+            element: document.createElement('canvas'),
+            size: 100,
+            value: selectedQRData
+        });
+
+        document.getElementById('embedded-qr').src = qr.toDataURL();
+
+        nextStep(4);
+    }
+
+    function selectTemplate(templateName, element) {
+        document.querySelectorAll('.template').forEach(template => {
+            template.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        document.getElementById('selected-template').innerText = "Selected: " + templateName;
+        document.getElementById('generate-resume-btn').disabled = false;
+    }
+
+    function generateResume() {
+        document.getElementById('resume-name').innerText = document.getElementById('name').value;
+        document.getElementById('resume-email').innerText = document.getElementById('email').value;
+        document.getElementById('resume-skills').innerText = document.getElementById('skills').value;
+        document.getElementById('resume-education').innerText = document.getElementById('education').value;
+        document.getElementById('resume-experience').innerText = document.getElementById('experience').value;
+        document.getElementById('resume-projects').innerText = document.getElementById('projects').value;
+
+        const uploadedContainer = document.getElementById('uploaded-documents');
+        uploadedContainer.innerHTML = '';
+        const files = document.getElementById('documents').files;
+
+        for (let i = 0; i < files.length; i++) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(event) {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                uploadedContainer.appendChild(img);
+            };
+            fileReader.readAsDataURL(files[i]);
+        }
+
+        nextStep(5);
+    }
+
+    function downloadResume() {
+        const resumeElement = document.getElementById('resume-output');
+
+        html2canvas(resumeElement).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'Resume_with_QR.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+</script>
+
+</body>
+</html>
